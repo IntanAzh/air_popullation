@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web-Integrated Early Warning System | Industrial Air Quality Cilacap</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --panel: #161b22;
+            --panel-border: #30363d;
+            --text: #f0f6fc;
+            --text-sub: #8b949e;
+            --accent: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.15);
+            --success: #2ea043;
+            --warning: #dbab09;
+            --danger: #e36209;
+            --critical: #cb2431;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 24px; line-height: 1.5; }
+
+        .header { margin-bottom: 24px; border-bottom: 1px solid var(--panel-border); padding-bottom: 16px; }
+        .header h1 { font-size: 1.6rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+        .header p { color: var(--text-sub); font-size: 0.95rem; }
+
+        /* Alert Banner */
+        .alert-banner {
+            border-radius: 12px; padding: 20px; margin-bottom: 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .alert-info h2 { font-size: 1.3rem; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+        .badge { font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; }
+
+        /* Grid Layout */
+        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 20px; }
+        .card-label { color: var(--text-sub); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card-val { font-size: 2.2rem; font-weight: 700; margin: 8px 0 4px; }
+        .card-unit { font-size: 0.85rem; color: var(--text-sub); }
+
+        /* Main Chart Area */
+        .grid-charts { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
+        @media (max-width: 1024px) { .grid-charts { grid-template-columns: 1fr; } }
+        
+        .chart-box { height: 320px; margin-top: 16px; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--panel-border); }
+        th { color: var(--text-sub); font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Web-Integrated Early Warning System for Industrial Air Quality</h1>
+        <p>Spatio-Temporal PM2.5 & PM10 Forecasting Using Meteorological-Informed CNN-BiLSTM with Attention | Station Cilacap Sidakaya</p>
+    </div>
+
+    <!-- Early Warning Banner -->
+    <div class="alert-banner" id="alertBanner" style="background: rgba(46, 160, 67, 0.15); border-color: var(--success);">
+        <div class="alert-info">
+            <h2>STATUS ISPU: <span id="ispuCategory">BAIK</span> <span class="badge" id="ispuBadge" style="background: var(--success);">GOOD</span></h2>
+            <p id="alertWarning">Kualitas udara sangat baik. Tidak ada dampak kesehatan.</p>
+            <p style="margin-top: 6px; font-size: 0.85rem; color: var(--text-sub);" id="alertAction">Aktivitas luar ruangan aman untuk semua kelompok masyarakat dan pekerja industri.</p>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 0.8rem; color: var(--text-sub);">Prediksi Horizon (+1 Jam):</div>
+            <div style="font-size: 2rem; font-weight: 700;" id="ispuVal">24.5</div>
+            <div style="font-size: 0.75rem; color: var(--text-sub);">Indeks ISPU PM2.5</div>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid-stats">
+        <div class="card">
+            <div class="card-label">Prediksi PM2.5 (+30 m)</div>
+            <div class="card-val" id="pm25Val" style="color: var(--accent);">--</div>
+            <div class="card-unit">µg/m³ (Target fisik)</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Prediksi PM10 (+30 m)</div>
+            <div class="card-val" id="pm10Val" style="color: #a371f7;">--</div>
+            <div class="card-unit">µg/m³ (Target fisik)</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Attention Peak Weight</div>
+            <div class="card-val" id="attnPeak">--</div>
+            <div class="card-unit">Fokus jam historis kritis</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Model Accuracy (R²)</div>
+            <div class="card-val" id="r2Score" style="color: var(--success);">0.95</div>
+            <div class="card-unit">Evaluasi Test Set</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-charts">
+        <div class="card">
+            <h3>Forecast Multi-Step PM2.5 & PM10 (CNN-BiLSTM-Attention)</h3>
+            <div class="chart-box">
+                <canvas id="forecastChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h3>Temporal Attention Distribution</h3>
+            <div class="chart-box">
+                <canvas id="attnChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Metrics Table -->
+    <div class="card">
+        <h3>Evaluasi Kinerja Model pada Test Set (Inverse Transformed)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Target Parameter</th>
+                    <th>MAE (µg/m³)</th>
+                    <th>RMSE (µg/m³)</th>
+                    <th>MAPE (%)</th>
+                    <th>R² Score</th>
+                </tr>
+            </thead>
+            <tbody id="metricsBody">
+                <tr><td>PM2.5</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
+                <tr><td>PM10</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let forecastChart, attnChart;
+
+        async function loadData() {
+            try {
+                const res = await fetch('/api/predict?index=0');
+                const data = await res.json();
+
+                const warn = data.early_warning_step1;
+                document.getElementById('ispuCategory').innerText = warn.category;
+                document.getElementById('ispuBadge').innerText = warn.level;
+                document.getElementById('ispuBadge').style.background = warn.color;
+                document.getElementById('ispuVal').innerText = warn.ispu;
+                document.getElementById('alertWarning').innerText = warn.warning;
+                document.getElementById('alertAction').innerText = warn.action;
+
+                document.getElementById('alertBanner').style.background = warn.color + '22';
+                document.getElementById('alertBanner').style.borderColor = warn.color;
+
+                document.getElementById('pm25Val').innerText = data.predictions.PM25[0];
+                document.getElementById('pm10Val').innerText = data.predictions.PM10[0];
+
+                const maxAttn = Math.max(...data.attention_weights);
+                document.getElementById('attnPeak').innerText = (maxAttn * 100).toFixed(1) + '%';
+
+                renderForecastChart(data);
+                renderAttnChart(data.attention_weights);
+            } catch(e) {
+                console.error(e);
+            }
+
+            try {
+                const res = await fetch('/api/metrics');
+                const metrics = await res.json();
+                let html = '';
+                for (let k in metrics) {
+                    html += `<tr>
+                        <td><strong>${k}</strong></td>
+                        <td>${metrics[k].MAE_ug_m3}</td>
+                        <td>${metrics[k].RMSE_ug_m3}</td>
+                        <td>${metrics[k].MAPE_percent}%</td>
+                        <td><span style="color: var(--success); font-weight: 700;">${metrics[k].R2_Score}</span></td>
+                    </tr>`;
+                }
+                document.getElementById('metricsBody').innerHTML = html;
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function renderForecastChart(data) {
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+            if (forecastChart) forecastChart.destroy();
+
+            forecastChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.forecast_horizon_hours,
+                    datasets: [
+                        { label: 'Prediksi PM2.5 (µg/m³)', data: data.predictions.PM25, borderColor: '#58a6ff', tension: 0.3 },
+                        { label: 'Aktual PM2.5 (µg/m³)', data: data.ground_truth.PM25, borderColor: '#58a6ff', borderDash: [5,5], tension: 0.3 },
+                        { label: 'Prediksi PM10 (µg/m³)', data: data.predictions.PM10, borderColor: '#a371f7', tension: 0.3 },
+                        { label: 'Aktual PM10 (µg/m³)', data: data.ground_truth.PM10, borderColor: '#a371f7', borderDash: [5,5], tension: 0.3 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function renderAttnChart(weights) {
+            const ctx = document.getElementById('attnChart').getContext('2d');
+            if (attnChart) attnChart.destroy();
+
+            const labels = weights.map((_, i) => `t-${48-i}`);
+            attnChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{ label: 'Bobot Atensi', data: weights, backgroundColor: '#58a6ff88' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>

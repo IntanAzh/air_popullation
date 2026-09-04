@@ -1,0 +1,22 @@
+# Python Virtual Environment & Cache
+venv/
+ENV/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# IDE & Editor files
+.vscode/
+.idea/
+
+# Large Binary Dataset Files (Can be generated via `python export_dataset.py`)
+*.npy
+*.parquet
+data/processed/tensors/*.npy
+data/processed/*.parquet

@@ -1,0 +1,14 @@
+{
+    "PM2.5": {
+        "MAE_ug_m3": 1.4191,
+        "RMSE_ug_m3": 1.978,
+        "MAPE_percent": 21.1204,
+        "R2_Score": 0.1442
+    },
+    "PM10": {
+        "MAE_ug_m3": 2.0717,
+        "RMSE_ug_m3": 2.8819,
+        "MAPE_percent": 16.4348,
+        "R2_Score": 0.136
+    }
+}
