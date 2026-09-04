@@ -11,7 +11,7 @@ An end-to-end Web-Integrated Early Warning System for Industrial Air Quality mon
 
 ---
 
-## 🏛️ System Architecture & Workflow
+## 🏛️ System Architecture & Workflow Diagram
 
 ```
 [Input Matrix (48 steps x 59 features)]
@@ -37,14 +37,38 @@ An end-to-end Web-Integrated Early Warning System for Industrial Air Quality mon
 
 ---
 
-## 📊 Evaluation Results (Isolated 20% Chronological Test Set)
+## 📈 Visualizations & Performance Diagrams (300 DPI)
 
-Evaluated on physical concentration units ($\mu g/m^3$) on the isolated chronological test set:
+### 1. Time-Series Prediction vs Actual Plot
+![Actual vs Predicted Timeseries](static/plots/actual_vs_predicted_timeseries.png)
+
+### 2. Scatter Plot Regression ($y = x$)
+![Scatter Regression Metrics](static/plots/scatter_regression_metrics.png)
+
+### 3. Residual Error Distribution
+![Residual Error Distribution](static/plots/residual_error_distribution.png)
+
+### 4. Model Benchmark Comparison (Bar Chart)
+![Model Benchmark Comparison](static/plots/model_benchmark_comparison.png)
+
+---
+
+## 📊 Evaluation & Benchmark Tables (Isolated 20% Test Set)
+
+### Table 1: Performance Metrics on Isolated 20% Test Set ($\mu g/m^3$)
 
 | Parameter Target | MAE ($\mu g/m^3$) | RMSE ($\mu g/m^3$) | MAPE (%) | $R^2$ Score | Forecasting Horizon |
 |---|---|---|---|---|---|
 | **PM2.5** | **1.4191** | **1.9780** | **21.12%** | **0.1442** | +30 min & +60 min |
 | **PM10** | **2.0717** | **2.8819** | **16.43%** | **0.1360** | +30 min & +60 min |
+
+### Table 2: Benchmark Comparison with Baseline Models
+
+| Model Algorithm | PM2.5 MAE ($\mu g/m^3$) | PM10 MAE ($\mu g/m^3$) | PM2.5 RMSE ($\mu g/m^3$) | PM10 RMSE ($\mu g/m^3$) | Feature Representation |
+|---|---|---|---|---|---|
+| **Proposed CNN-BiLSTM-Attention** | **1.4191** | **2.0717** | **1.9780** | **2.8819** | **Deep Learning + Temporal Attention** |
+| **Ridge Regression (Baseline)** | 0.8152 | 1.1819 | 1.2698 | 1.8408 | Linear Regularization Baseline |
+| **Random Forest (Baseline)** | 1.4623 | 2.1204 | 3.0867 | 4.4757 | Non-linear Tree Ensemble Baseline |
 
 ---
 
@@ -65,7 +89,7 @@ airpollutan/
 ├── generate_visualizations.py         # Publication-grade 300 DPI plot generator
 ├── evaluate_test_data_metrics.py      # Independent test set evaluation script
 ├── master_pipeline_vscode.py          # Integrated master pipeline script
-├── data/                              # Master CSV, Parquet, and 3D Tensors
+├── data/                              # Master CSV & Data Quality Reports
 ├── models/                            # Trained model weights & JSON metric reports
 ├── static/plots/                      # Generated 300 DPI visualization figures
 └── templates/index.html               # Responsive Glassmorphism Early Warning Dashboard UI
