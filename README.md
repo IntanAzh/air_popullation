@@ -11,12 +11,19 @@ An end-to-end, scientifically rigorous 12-Step Data Science and Deep Learning Pi
 
 ---
 
+## 📄 Complete Research & Audit Documentation
+
+- 📄 **[Laporan Audit & Implementasi Lengkap (Step 1 - 11)](docs/LAPORAN_AUDIT_DAN_IMPLEMENTASI_LENGKAP_STEP_1_11.md)**: Dokumen audit metodologi 12 step lengkap dengan seluruh tabel audit, hasil imputasi, split kronologis, grid search, dan uji signifikansi statistik.
+- 📄 **[Technical Paper Walkthrough](docs/WALKTHROUGH.md)**: Naskah teknis komprehensif penulisan paper/tesis.
+
+---
+
 ## 📌 Key Milestones & Final Conclusions
 
-1. **Pruning High-Dimensional Redundancy**: Pruning features from 94 (F4) to 16 (F1) increased the sample-to-input ratio from **2.05** to **12.02**, resolving deep learning overfitting.
+1. **Pruning High-Dimensional Redundancy**: Feature pruning from 94 (F4) to 16 (F1) increased sample-to-input ratio from **2.05** to **12.02**, resolving deep learning overfitting.
 2. **CNN-BiLSTM Superiority over Persistence**: The champion model **CNN-BiLSTM (F1)** achieves $R^2_{30} = 0.7062$ ($\text{RMSE}_{30} = 0.9549\text{ }\mu\text{g/m}^3$) and $R^2_{60} = 0.5282$ ($\text{RMSE}_{60} = 1.2101\text{ }\mu\text{g/m}^3$), officially outperforming Persistence ($R^2_{30} = 0.6882, R^2_{60} = 0.4393$) and Ridge ($R^2_{30} = 0.6202$).
 3. **Statistical Significance Confirmed**: Paired Block Bootstrap Testing (1,000 resamples) proves the +60m RMSE improvement ($8.27\%$) is **statistically significant ($p = 0.0070 < 0.01$, 95% CI $[0.0203, 0.1965]$)**.
-4. **Attention Mechanism Inefficiency**: Adding Soft Attention on ultra-short horizons (+30m/+60m) adds parameter noise, reducing average $R^2$ from 0.6172 to 0.5697. Standard BiLSTM hidden pooling is optimal.
+4. **Attention Mechanism Inefficiency**: Soft Attention adds parameter noise over ultra-short horizons (+30m/+60m), reducing average $R^2$ from 0.6172 to 0.5697. Standard BiLSTM hidden pooling is optimal.
 
 ---
 
@@ -51,30 +58,42 @@ An end-to-end, scientifically rigorous 12-Step Data Science and Deep Learning Pi
 
 ---
 
-## 🛠️ Repository Structure
+## 🛠️ Organized Repository Structure
 
 ```
 airpollutan/
-├── WALKTHROUGH.md                     # Comprehensive 12-step technical research paper walkthrough
-├── pipeline_scripts/
-│   ├── perform_step10_fast.py          # Step 10 validation search & capacity pruning script
-│   └── run_step11_instant.py           # Step 11 Diebold-Mariano & Block Bootstrap evaluator
-├── figures/                           # 300 DPI publication figures
+├── docs/                              # Comprehensive Research Documentation
+│   ├── LAPORAN_AUDIT_DAN_IMPLEMENTASI_LENGKAP_STEP_1_11.md
+│   └── WALKTHROUGH.md
+├── src/                               # Modular Source Code Package
+│   ├── etl_pipeline.py                 # ETL & Tiered Imputation Module (Steps 1-3)
+│   ├── feature_engineering.py          # Lag, Rolling, Cyclic & Wind Vector Features (Step 4)
+│   ├── create_dataset_tensors.py       # 3D Sliding Window Sequence Generator (Step 7)
+│   ├── model_cnn_bilstm_attention.py   # PyTorch Hybrid Deep Learning Models
+│   ├── scaler_utils.py                 # StandardScaler Inverse Transform Helper
+│   └── utils/                          # Utility & Verification Scripts
+├── pipeline_scripts/                  # Main Executable Pipeline Steps
+│   ├── 01_step10_validation_optimization.py
+│   └── 02_step11_statistical_evaluation.py
+├── figures/                           # 300 DPI Publication Figures
 │   ├── fig1_timeseries_forecast.png
 │   ├── fig2_scatter_actual_vs_pred.png
 │   ├── fig3_residual_distribution.png
 │   └── fig4_model_comparison_bar.png
-├── reports/                           # Comprehensive JSON audit & statistical reports
+├── reports/                           # JSON Audit & Statistical Benchmark Reports
 │   ├── audit_7a_to_7e.json
 │   ├── step8_benchmark_results.json
 │   ├── step9_diagnostics_report.json
 │   ├── step10_optimization_report.json
 │   └── step11_final_statistical_report.json
-├── models/                            # Trained PyTorch model checkpoints (.pt) and scalers (.joblib)
+├── models/                            # Trained PyTorch Models (.pt) & Scalers (.joblib)
 │   ├── Optimal_CNN_BiLSTM.pt
 │   ├── Optimal_CNN_BiLSTM_Attention.pt
 │   ├── x_scaler.joblib
 │   └── y_scaler.joblib
-├── app.py                             # Flask Web Early Warning System Application
-└── README.md                          # Project Documentation & Summary
+├── templates/                         # Web Application UI Templates
+│   └── index.html
+├── app.py                             # Early Warning System Web Dashboard Launcher
+├── README.md                          # Main Repository Readme
+└── .gitignore                         # Exclusion Config
 ```
