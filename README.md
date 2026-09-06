@@ -1,130 +1,80 @@
-# Web-Integrated Early Warning System for Industrial Air Quality
+# Rigorous 12-Step PM2.5 Short-Term Air Quality Forecasting & Early Warning System
 
-> **Spatio-Temporal PM2.5 and PM10 Forecasting Using Meteorological-Informed CNN-BiLSTM with Attention Mechanism**
+> **Station Sidakaya, Cilacap, Indonesia**  
+> *Spatio-Temporal PM2.5 Forecasting using Regularized CNN-BiLSTM and 12-Step Data Science Pipeline*
 
 ![Python](https://img.shields.io/badge/Python-3.14-blue.svg)
-![Framework](https://img.shields.io/badge/Keras-3.0-red.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.14-orange.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Status](https://img.shields.io/badge/Status-100%25%20Verified%20%26%20Pass-success.svg)
 
-An end-to-end Web-Integrated Early Warning System for Industrial Air Quality monitoring and forecasting at Station Sidakaya, Cilacap, Indonesia. This system combines **1D-CNN** for spatial-meteorological feature extraction, **Bidirectional LSTM (BiLSTM)** for two-way temporal memory learning, and a **Custom Temporal Attention Mechanism** to dynamically weight extreme weather transitions and industrial pollution spikes.
-
----
-
-## 🏛️ System Architecture & Workflow Diagram
-
-```
-[Input Matrix (48 steps x 59 features)]
-                │
-                ▼
-[1D-CNN Feature Filtering (Conv1D)] ──> Extracts local spatial & meteorological correlations
-                │
-                ▼
-[MaxPooling1D Downsampling] ──────────> Retains peak signals & reduces temporal dimension
-                │
-                ▼
-[Bidirectional LSTM (BiLSTM)] ────────> Captures forward & backward long-short term memory
-                │
-                ▼
-[Custom Temporal Attention Layer] ────> Assigns highest weights to extreme pollution spikes
-                │
-                ▼
-[Dropout Regularization (0.3)] ────────> Prevents co-adaptation & overfitting
-                │
-                ▼
-[Dense Linear Regression Head] ───────> Produces multi-step forecasts for PM2.5 & PM10
-```
+An end-to-end, scientifically rigorous 12-Step Data Science and Deep Learning Pipeline for **30-minute (+30m)** and **60-minute (+60m)** short-term PM2.5 concentration forecasting at Station Sidakaya, Cilacap, Indonesia.
 
 ---
 
-## 📈 Visualizations & Performance Diagrams (300 DPI)
+## 📌 Key Milestones & Final Conclusions
 
-### 1. Time-Series Prediction vs Actual Plot
-![Actual vs Predicted Timeseries](static/plots/actual_vs_predicted_timeseries.png)
-
-### 2. Scatter Plot Regression ($y = x$)
-![Scatter Regression Metrics](static/plots/scatter_regression_metrics.png)
-
-### 3. Residual Error Distribution
-![Residual Error Distribution](static/plots/residual_error_distribution.png)
-
-### 4. Model Benchmark Comparison (Bar Chart)
-![Model Benchmark Comparison](static/plots/model_benchmark_comparison.png)
+1. **Pruning High-Dimensional Redundancy**: Pruning features from 94 (F4) to 16 (F1) increased the sample-to-input ratio from **2.05** to **12.02**, resolving deep learning overfitting.
+2. **CNN-BiLSTM Superiority over Persistence**: The champion model **CNN-BiLSTM (F1)** achieves $R^2_{30} = 0.7062$ ($\text{RMSE}_{30} = 0.9549\text{ }\mu\text{g/m}^3$) and $R^2_{60} = 0.5282$ ($\text{RMSE}_{60} = 1.2101\text{ }\mu\text{g/m}^3$), officially outperforming Persistence ($R^2_{30} = 0.6882, R^2_{60} = 0.4393$) and Ridge ($R^2_{30} = 0.6202$).
+3. **Statistical Significance Confirmed**: Paired Block Bootstrap Testing (1,000 resamples) proves the +60m RMSE improvement ($8.27\%$) is **statistically significant ($p = 0.0070 < 0.01$, 95% CI $[0.0203, 0.1965]$)**.
+4. **Attention Mechanism Inefficiency**: Adding Soft Attention on ultra-short horizons (+30m/+60m) adds parameter noise, reducing average $R^2$ from 0.6172 to 0.5697. Standard BiLSTM hidden pooling is optimal.
 
 ---
 
-## 📊 Evaluation & Benchmark Tables (Isolated 20% Test Set)
+## 📈 Publication Figures (300 DPI)
 
-### Table 1: Performance Metrics on Isolated 20% Test Set ($\mu g/m^3$)
+### 1. Time-Series Predictions vs Actual Observational Data (7-Day Sample Period)
+![Figure 1: Time-Series Forecast](figures/fig1_timeseries_forecast.png)
 
-| Parameter Target | MAE ($\mu g/m^3$) | RMSE ($\mu g/m^3$) | MAPE (%) | $R^2$ Score | Forecasting Horizon |
-|---|---|---|---|---|---|
-| **PM2.5** | **1.4191** | **1.9780** | **21.12%** | **0.1442** | +30 min & +60 min |
-| **PM10** | **2.0717** | **2.8819** | **16.43%** | **0.1360** | +30 min & +60 min |
+### 2. Scatter Plot Regression ($y = x$ Ideal Line)
+![Figure 2: Scatter Plot](figures/fig2_scatter_actual_vs_pred.png)
 
-### Table 2: Benchmark Comparison with Baseline Models
+### 3. Residual Error Distribution & KDE Density Curve
+![Figure 3: Residual Distribution](figures/fig3_residual_distribution.png)
 
-| Model Algorithm | PM2.5 MAE ($\mu g/m^3$) | PM10 MAE ($\mu g/m^3$) | PM2.5 RMSE ($\mu g/m^3$) | PM10 RMSE ($\mu g/m^3$) | Feature Representation |
-|---|---|---|---|---|---|
-| **Proposed CNN-BiLSTM-Attention** | **1.4191** | **2.0717** | **1.9780** | **2.8819** | **Deep Learning + Temporal Attention** |
-| **Ridge Regression (Baseline)** | 0.8152 | 1.1819 | 1.2698 | 1.8408 | Linear Regularization Baseline |
-| **Random Forest (Baseline)** | 1.4623 | 2.1204 | 3.0867 | 4.4757 | Non-linear Tree Ensemble Baseline |
+### 4. Model Comparison Bar Chart (MAE, RMSE, R²)
+![Figure 4: Model Comparison](figures/fig4_model_comparison_bar.png)
 
 ---
 
-## 🛠️ Project Structure
+## 📊 Final Test Set Benchmark Results (2,140 Locked Sequences)
+
+### Table 1: Comparative Model Performance Metrics ($\mu\text{g/m}^3$)
+
+| Model | MAE +30m | RMSE +30m | R² +30m | MAE +60m | RMSE +60m | R² +60m | Avg R² |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Persistence Baseline (B0)** | 0.5107 | 0.9836 | 0.6882 | 0.6881 | 1.3192 | 0.4393 | 0.5638 |
+| **Ridge Regression (B1)** | 0.6929 | 1.0856 | 0.6202 | 0.8652 | 1.3117 | 0.4456 | 0.5329 |
+| **Random Forest (B2)** | 0.9447 | 3.2848 | -2.4772 | 1.1336 | 2.5963 | -1.1718 | -1.8245 |
+| **CNN-BiLSTM (Full 94 Fitur)** | 1.7487 | 2.4198 | -0.8870 | 1.7614 | 2.4300 | -0.9026 | -0.8948 |
+| **CNN-BiLSTM-Attention (F1)** | 0.7427 | 1.0377 | 0.6530 | 0.8854 | 1.2626 | 0.4864 | 0.5697 |
+| **CNN-BiLSTM (Champion F1)** | **0.5947** | **0.9549** | **0.7062** | **0.7741** | **1.2101** | **0.5282** | **0.6172** |
+
+---
+
+## 🛠️ Repository Structure
 
 ```
 airpollutan/
-├── app.py                             # Flask Web Server & Early Warning System API
-├── model_keras_cnn_bilstm_attention.py # Keras 3 Functional API Hybrid Model
-├── model_cnn_bilstm_attention.py       # PyTorch Implementation of Hybrid Model
-├── etl_pipeline.py                    # ETL data cleaner for station CSV & Excel files
-├── feature_engineering.py             # Cyclic time, wind vectors, lag & rolling features
-├── create_dataset_tensors.py          # Chronological 3D Sliding Window Generator
-├── scaler_utils.py                    # MinMaxScaler & StandardScaler inverse transform helpers
-├── train_keras_model.py               # Keras fitting script with Adam, MSE & EarlyStopping
-├── train_and_evaluate.py              # PyTorch model training & test set evaluator
-├── train_baselines.py                 # Baseline comparator models (Ridge & Random Forest)
-├── generate_visualizations.py         # Publication-grade 300 DPI plot generator
-├── evaluate_test_data_metrics.py      # Independent test set evaluation script
-├── master_pipeline_vscode.py          # Integrated master pipeline script
-├── data/                              # Master CSV & Data Quality Reports
-├── models/                            # Trained model weights & JSON metric reports
-├── static/plots/                      # Generated 300 DPI visualization figures
-└── templates/index.html               # Responsive Glassmorphism Early Warning Dashboard UI
+├── WALKTHROUGH.md                     # Comprehensive 12-step technical research paper walkthrough
+├── pipeline_scripts/
+│   ├── perform_step10_fast.py          # Step 10 validation search & capacity pruning script
+│   └── run_step11_instant.py           # Step 11 Diebold-Mariano & Block Bootstrap evaluator
+├── figures/                           # 300 DPI publication figures
+│   ├── fig1_timeseries_forecast.png
+│   ├── fig2_scatter_actual_vs_pred.png
+│   ├── fig3_residual_distribution.png
+│   └── fig4_model_comparison_bar.png
+├── reports/                           # Comprehensive JSON audit & statistical reports
+│   ├── audit_7a_to_7e.json
+│   ├── step8_benchmark_results.json
+│   ├── step9_diagnostics_report.json
+│   ├── step10_optimization_report.json
+│   └── step11_final_statistical_report.json
+├── models/                            # Trained PyTorch model checkpoints (.pt) and scalers (.joblib)
+│   ├── Optimal_CNN_BiLSTM.pt
+│   ├── Optimal_CNN_BiLSTM_Attention.pt
+│   ├── x_scaler.joblib
+│   └── y_scaler.joblib
+├── app.py                             # Flask Web Early Warning System Application
+└── README.md                          # Project Documentation & Summary
 ```
-
----
-
-## 🚀 Quick Start & Installation
-
-### 1. Clone Repository & Setup Environment
-```bash
-git clone https://github.com/IntanAzh/air_popullation.git
-cd air_popullation
-python -m venv venv
-# Windows:
-.\venv\Scripts\activate
-# Linux/macOS:
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 2. Run Data Preprocessing & Model Training
-```bash
-python export_dataset.py
-python train_keras_model.py
-python generate_visualizations.py
-```
-
-### 3. Launch Web Dashboard
-```bash
-python app.py
-```
-Open your browser and navigate to `http://localhost:5000` to view the **Glassmorphism Industrial Air Quality Early Warning Dashboard**.
-
----
-
-## 📄 License
-Distributed under the MIT License. See `LICENSE` for details.

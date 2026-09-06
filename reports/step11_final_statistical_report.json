@@ -1,0 +1,194 @@
+{
+  "status": "SUCCESS",
+  "step_11a_final_performance_summary": {
+    "Persistence (B0)": {
+      "MAE_30": 0.5107,
+      "RMSE_30": 0.9836,
+      "R2_30": 0.6882,
+      "MAE_60": 0.6881,
+      "RMSE_60": 1.3192,
+      "R2_60": 0.4393,
+      "MAE_avg": 0.5994,
+      "RMSE_avg": 1.1514,
+      "R2_avg": 0.5638
+    },
+    "Ridge Regression (B1)": {
+      "MAE_30": 0.6929,
+      "RMSE_30": 1.0856,
+      "R2_30": 0.6202,
+      "MAE_60": 0.8652,
+      "RMSE_60": 1.3117,
+      "R2_60": 0.4456,
+      "MAE_avg": 0.779,
+      "RMSE_avg": 1.1987,
+      "R2_avg": 0.5329
+    },
+    "Random Forest (B2)": {
+      "MAE_30": 0.9447,
+      "RMSE_30": 3.2848,
+      "R2_30": -2.4772,
+      "MAE_60": 1.1336,
+      "RMSE_60": 2.5963,
+      "R2_60": -1.1718,
+      "MAE_avg": 1.0392,
+      "RMSE_avg": 2.9406,
+      "R2_avg": -1.8245
+    },
+    "CNN-BiLSTM (Full 94 Fitur)": {
+      "MAE_30": 1.7487,
+      "RMSE_30": 2.4198,
+      "R2_30": -0.887,
+      "MAE_60": 1.7614,
+      "RMSE_60": 2.43,
+      "R2_60": -0.9026,
+      "MAE_avg": 1.7551,
+      "RMSE_avg": 2.4249,
+      "R2_avg": -0.8948
+    },
+    "CNN-BiLSTM-Attention (F1)": {
+      "MAE_30": 0.7427,
+      "RMSE_30": 1.0377,
+      "R2_30": 0.653,
+      "MAE_60": 0.8854,
+      "RMSE_60": 1.2626,
+      "R2_60": 0.4864,
+      "MAE_avg": 0.8141,
+      "RMSE_avg": 1.1502,
+      "R2_avg": 0.5697
+    },
+    "CNN-BiLSTM (Champion F1)": {
+      "MAE_30": 0.5947,
+      "RMSE_30": 0.9549,
+      "R2_30": 0.7062,
+      "MAE_60": 0.7741,
+      "RMSE_60": 1.2101,
+      "R2_60": 0.5282,
+      "MAE_avg": 0.6844,
+      "RMSE_avg": 1.0825,
+      "R2_avg": 0.6172
+    }
+  },
+  "step_11b_relative_improvements_over_persistence": {
+    "+30m": {
+      "RMSE_Persistence": 0.9836,
+      "RMSE_Champion": 0.9549,
+      "RMSE_Improvement_Percent": 2.92,
+      "MAE_Improvement_Percent": -16.45
+    },
+    "+60m": {
+      "RMSE_Persistence": 1.3192,
+      "RMSE_Champion": 1.2101,
+      "RMSE_Improvement_Percent": 8.27,
+      "MAE_Improvement_Percent": -12.5
+    }
+  },
+  "step_11c_statistical_significance_tests": {
+    "Diebold_Mariano_Test": {
+      "+30m": {
+        "DM_statistic": 1.2527,
+        "p_value": 0.210307,
+        "significant_alpha_0.01": false
+      },
+      "+60m": {
+        "DM_statistic": 1.8844,
+        "p_value": 0.059511,
+        "significant_alpha_0.01": false
+      }
+    },
+    "Block_Bootstrap_Test": {
+      "+30m": {
+        "mean_diff": 0.0279,
+        "95_CI": [
+          -0.0146,
+          0.0718
+        ],
+        "p_value": 0.107
+      },
+      "+60m": {
+        "mean_diff": 0.1064,
+        "95_CI": [
+          0.0203,
+          0.1965
+        ],
+        "p_value": 0.007
+      }
+    }
+  },
+  "step_11d_residual_and_error_analysis": {
+    "residual_statistics": {
+      "+30m": {
+        "mean_bias": -0.1375,
+        "std_dev": 0.9449,
+        "median": -0.2447,
+        "skewness": 2.434,
+        "kurtosis": 26.0236,
+        "max_positive_error": 11.114,
+        "max_negative_error": -4.8318
+      },
+      "+60m": {
+        "mean_bias": -0.2004,
+        "std_dev": 1.1934,
+        "median": -0.3842,
+        "skewness": 2.4992,
+        "kurtosis": 30.0486,
+        "max_positive_error": 15.8628,
+        "max_negative_error": -8.4885
+      }
+    },
+    "error_by_concentration_category": {
+      "Baik (<15)": {
+        "count": 2135,
+        "MAE_30": 0.5791,
+        "RMSE_30": 0.8742
+      },
+      "Sedang (15-35)": {
+        "count": 5,
+        "MAE_30": 7.2666,
+        "RMSE_30": 7.996
+      }
+    },
+    "top5_extreme_error_events": [
+      {
+        "index": 833,
+        "date": "2025-10-04T17:30:00.000000",
+        "actual_PM2.5_30m": 16.9,
+        "predicted_PM2.5_30m": 5.79,
+        "absolute_error": 11.11
+      },
+      {
+        "index": 1224,
+        "date": "2025-10-12T21:00:00.000000",
+        "actual_PM2.5_30m": 22.8,
+        "predicted_PM2.5_30m": 12.3,
+        "absolute_error": 10.5
+      },
+      {
+        "index": 834,
+        "date": "2025-10-04T18:00:00.000000",
+        "actual_PM2.5_30m": 21.7,
+        "predicted_PM2.5_30m": 14.28,
+        "absolute_error": 7.42
+      },
+      {
+        "index": 1228,
+        "date": "2025-10-12T23:00:00.000000",
+        "actual_PM2.5_30m": 14.7,
+        "predicted_PM2.5_30m": 7.66,
+        "absolute_error": 7.04
+      },
+      {
+        "index": 1073,
+        "date": "2025-10-09T17:30:00.000000",
+        "actual_PM2.5_30m": 14.1,
+        "predicted_PM2.5_30m": 7.08,
+        "absolute_error": 7.02
+      }
+    ]
+  },
+  "step_11e_generated_figures": {
+    "fig1_timeseries": "C:\\Users\\INTAN\\.gemini\\antigravity\\brain\\5c3a30c5-8ff2-4f5c-bacf-cc114ea67f12\\scratch\\figures\\fig1_timeseries_forecast.png",
+    "fig2_scatter": "C:\\Users\\INTAN\\.gemini\\antigravity\\brain\\5c3a30c5-8ff2-4f5c-bacf-cc114ea67f12\\scratch\\figures\\fig2_scatter_actual_vs_pred.png",
+    "fig3_residuals": "C:\\Users\\INTAN\\.gemini\\antigravity\\brain\\5c3a30c5-8ff2-4f5c-bacf-cc114ea67f12\\scratch\\figures\\fig3_residual_distribution.png",
+    "fig4_comparison": "C:\\Users\\INTAN\\.gemini\\antigravity\\brain\\5c3a30c5-8ff2-4f5c-bacf-cc114ea67f12\\scratch\\figures\\fig4_model_comparison_bar.png"
+  }
+}

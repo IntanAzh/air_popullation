@@ -1,0 +1,97 @@
+{
+  "status": "SUCCESS",
+  "step_10a_early_stopping": "Patience 7 on val_loss with restore_best_checkpoint=True",
+  "step_10bc_top_validation_search_results": [
+    {
+      "feature_set": "F1_PM2.5_History_Only",
+      "feature_count": 16,
+      "conv_filters": 32,
+      "lstm_hidden": 32,
+      "dropout_rate": 0.2,
+      "best_epoch": 13,
+      "val_loss_scaled": 0.163334,
+      "val_rmse_unscaled": 1.3564
+    },
+    {
+      "feature_set": "F1_PM2.5_History_Only",
+      "feature_count": 16,
+      "conv_filters": 64,
+      "lstm_hidden": 32,
+      "dropout_rate": 0.3,
+      "best_epoch": 19,
+      "val_loss_scaled": 0.164972,
+      "val_rmse_unscaled": 1.3716
+    },
+    {
+      "feature_set": "F1_PM2.5_History_Only",
+      "feature_count": 16,
+      "conv_filters": 64,
+      "lstm_hidden": 64,
+      "dropout_rate": 0.5,
+      "best_epoch": 18,
+      "val_loss_scaled": 0.163595,
+      "val_rmse_unscaled": 1.3804
+    },
+    {
+      "feature_set": "F1_PM2.5_History_Only",
+      "feature_count": 16,
+      "conv_filters": 32,
+      "lstm_hidden": 32,
+      "dropout_rate": 0.3,
+      "best_epoch": 18,
+      "val_loss_scaled": 0.164341,
+      "val_rmse_unscaled": 1.3916
+    },
+    {
+      "feature_set": "F1_PM2.5_History_Only",
+      "feature_count": 16,
+      "conv_filters": 64,
+      "lstm_hidden": 64,
+      "dropout_rate": 0.3,
+      "best_epoch": 10,
+      "val_loss_scaled": 0.164101,
+      "val_rmse_unscaled": 1.3993
+    }
+  ],
+  "step_10d_locked_best_architecture": {
+    "feature_set": "F1_PM2.5_History_Only",
+    "feature_count": 16,
+    "conv_filters": 32,
+    "lstm_hidden": 32,
+    "dropout_rate": 0.2,
+    "best_epoch": 13,
+    "val_loss_scaled": 0.163334,
+    "val_rmse_unscaled": 1.3564
+  },
+  "step_10e_final_test_benchmark": {
+    "locked_test_sequences_count": 2140,
+    "CNN_BiLSTM": {
+      "MAE_30": 0.5947,
+      "RMSE_30": 0.9549,
+      "R2_30": 0.7062,
+      "MAE_60": 0.7741,
+      "RMSE_60": 1.2101,
+      "R2_60": 0.5282,
+      "MAE_avg": 0.6844,
+      "RMSE_avg": 1.0825,
+      "R2_avg": 0.6172
+    },
+    "CNN_BiLSTM_Attention": {
+      "MAE_30": 0.7427,
+      "RMSE_30": 1.0377,
+      "R2_30": 0.653,
+      "MAE_60": 0.8854,
+      "RMSE_60": 1.2626,
+      "R2_60": 0.4864,
+      "MAE_avg": 0.8141,
+      "RMSE_avg": 1.1502,
+      "R2_avg": 0.5697
+    },
+    "net_gain_from_attention": {
+      "R2_30_improvement": -0.0532,
+      "R2_60_improvement": -0.0418,
+      "R2_avg_improvement": -0.0475,
+      "RMSE_30_reduction": -0.0828
+    }
+  }
+}

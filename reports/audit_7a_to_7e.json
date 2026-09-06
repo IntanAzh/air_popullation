@@ -1,0 +1,42 @@
+{
+  "audit_7a_text": "========================================\n7A \u2014 TEMPORAL BOUNDARY AUDIT\n========================================\nTRAIN\nFirst input     : 2025-01-01 00:00:00\nLast input      : 2025-07-31T22:30:00.000000\nFirst target    : 2025-01-02T00:00:00.000000 (+30m) / 2025-01-02T00:30:00.000000 (+60m)\nLast target     : 2025-07-31T23:00:00.000000 (+30m) / 2025-07-31T23:30:00.000000 (+60m)\n\nVALIDATION\nFirst input     : 2025-08-31 00:00:00\nLast input      : 2025-09-16T08:00:00.000000\nFirst target    : 2025-09-01T00:00:00.000000 (+30m) / 2025-09-01T00:30:00.000000 (+60m)\nLast target     : 2025-09-16T08:30:00.000000 (+30m) / 2025-09-16T09:00:00.000000 (+60m)\n\nTEST\nFirst input     : 2025-09-16 09:30:00\nLast input      : 2025-10-31T22:30:00.000000\nFirst target    : 2025-09-17T09:30:00.000000 (+30m) / 2025-09-17T10:00:00.000000 (+60m)\nLast target     : 2025-10-31T23:00:00.000000 (+30m) / 2025-10-31T23:30:00.000000 (+60m)\n========================================\n",
+  "audit_7b_monthly_accepted_windows": {
+    "Train": {
+      "Month_1": 1427,
+      "Month_2": 1218,
+      "Month_3": 834,
+      "Month_4": 1392,
+      "Month_5": 1440,
+      "Month_6": 1433,
+      "Month_7": 1486
+    },
+    "Validation": {
+      "Month_8": 1,
+      "Month_9": 737
+    },
+    "Test": {
+      "Month_9": 654,
+      "Month_10": 1486
+    }
+  },
+  "audit_7c_rejection_summary": {
+    "total_candidate_windows": 14445,
+    "total_accepted": 12108,
+    "total_rejected": 2337,
+    "reasons": {
+      "timestamp_discontinuity": 0,
+      "missing_input_features": 0,
+      "invalid_target_outage": 2337
+    }
+  },
+  "audit_7d_continuity_verification": {
+    "train_input_and_target_100pct_continuous_30m": true,
+    "val_input_and_target_100pct_continuous_30m": true,
+    "test_input_and_target_100pct_continuous_30m": true
+  },
+  "audit_7e_data_provenance": {
+    "synthetic_ground_truth_used_for_main_forecasting": false,
+    "unobserved_august_outage_status": "Strictly Rejected (1,402 windows dropped from Validation)",
+    "ground_truth_source": "Observed / Approved Category 1 & Category 2 PM2.5 measurements only"
+  }
+}

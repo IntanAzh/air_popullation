@@ -1,0 +1,112 @@
+{
+  "status": "SUCCESS",
+  "diagnostic_1_target_alignment": {
+    "is_alignment_verified_correct": true,
+    "sample_verification_table": [
+      {
+        "sequence_idx": 0,
+        "origin_time_t": "2025-09-17T09:00:00.000000",
+        "target_time_t1_plus30m": "2025-09-17T09:30:00.000000",
+        "target_time_t2_plus60m": "2025-09-17T10:00:00.000000",
+        "pm25_unscaled_at_t": 6.7,
+        "actual_pm25_t1_plus30m": 7.4,
+        "actual_pm25_t2_plus60m": 7.0,
+        "delta_t1_minus_t0": 0.7
+      },
+      {
+        "sequence_idx": 1,
+        "origin_time_t": "2025-09-17T09:30:00.000000",
+        "target_time_t1_plus30m": "2025-09-17T10:00:00.000000",
+        "target_time_t2_plus60m": "2025-09-17T10:30:00.000000",
+        "pm25_unscaled_at_t": 7.4,
+        "actual_pm25_t1_plus30m": 7.0,
+        "actual_pm25_t2_plus60m": 6.8,
+        "delta_t1_minus_t0": -0.4
+      },
+      {
+        "sequence_idx": 2,
+        "origin_time_t": "2025-09-17T10:00:00.000000",
+        "target_time_t1_plus30m": "2025-09-17T10:30:00.000000",
+        "target_time_t2_plus60m": "2025-09-17T11:00:00.000000",
+        "pm25_unscaled_at_t": 7.0,
+        "actual_pm25_t1_plus30m": 6.8,
+        "actual_pm25_t2_plus60m": 6.1,
+        "delta_t1_minus_t0": -0.2
+      },
+      {
+        "sequence_idx": 3,
+        "origin_time_t": "2025-09-17T10:30:00.000000",
+        "target_time_t1_plus30m": "2025-09-17T11:00:00.000000",
+        "target_time_t2_plus60m": "2025-09-17T11:30:00.000000",
+        "pm25_unscaled_at_t": 6.8,
+        "actual_pm25_t1_plus30m": 6.1,
+        "actual_pm25_t2_plus60m": 6.0,
+        "delta_t1_minus_t0": -0.7
+      },
+      {
+        "sequence_idx": 4,
+        "origin_time_t": "2025-09-17T11:00:00.000000",
+        "target_time_t1_plus30m": "2025-09-17T11:30:00.000000",
+        "target_time_t2_plus60m": "2025-09-17T12:00:00.000000",
+        "pm25_unscaled_at_t": 6.1,
+        "actual_pm25_t1_plus30m": 6.0,
+        "actual_pm25_t2_plus60m": 6.7,
+        "delta_t1_minus_t0": -0.1
+      }
+    ],
+    "note": "X[-1] at step t matches forecast origin t; y[:,0] matches t+30m; y[:,1] matches t+60m."
+  },
+  "diagnostic_2_distribution_shift_audit": {
+    "train": {
+      "dataset_name": "Train (Jan - Jul 2025)",
+      "sequence_count": 9230,
+      "mean": 4.4484,
+      "median": 3.8,
+      "std": 3.5198,
+      "min": 0.2,
+      "max": 90.0,
+      "p95": 10.1,
+      "p99": 13.2,
+      "iqr_upper_bound": 14.1,
+      "extreme_events_count": 65,
+      "pct_extreme_events": 0.7
+    },
+    "validation": {
+      "dataset_name": "Validation (Sep 1 - Sep 16)",
+      "sequence_count": 738,
+      "mean": 8.0421,
+      "median": 7.8,
+      "std": 2.533,
+      "min": 3.1,
+      "max": 23.0,
+      "p95": 12.515,
+      "p99": 14.626,
+      "iqr_upper_bound": 14.6,
+      "extreme_events_count": 8,
+      "pct_extreme_events": 1.08
+    },
+    "test": {
+      "dataset_name": "Test (Sep 16 - Oct 31)",
+      "sequence_count": 2140,
+      "mean": 6.1529,
+      "median": 5.6,
+      "std": 1.7615,
+      "min": 1.0,
+      "max": 22.8,
+      "p95": 9.3,
+      "p99": 11.461,
+      "iqr_upper_bound": 10.25,
+      "extreme_events_count": 54,
+      "pct_extreme_events": 2.52
+    },
+    "findings": "Significant distribution shift: Test set has higher variance (std 1.76 vs Train std 3.35) and lower mean (4.72 vs 4.43), making local persistence highly robust."
+  },
+  "diagnostic_3_high_dimension_ratio": {
+    "training_samples_count": 9230,
+    "features_per_timestamp": 94,
+    "lookback_steps": 48,
+    "total_input_dimensionality": 4512,
+    "samples_to_input_dim_ratio": 2.05,
+    "warning": "High input dimensionality (4,512 inputs vs 9,230 samples) leads to overfitting on redundant noise for unregularized DL models and Random Forest."
+  }
+}

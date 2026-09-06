@@ -15,8 +15,9 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Large Binary Dataset Files (Can be generated via `python export_dataset.py`)
+# Large Binary & Data Files (Can be re-generated via pipeline scripts)
 *.npy
+*.npz
 *.parquet
-data/processed/tensors/*.npy
-data/processed/*.parquet
+*.csv
+data/processed/
