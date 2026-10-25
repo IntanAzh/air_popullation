@@ -310,10 +310,16 @@ def run_step10_fast():
     }
     
     out_path = os.path.join(SCRATCH_DIR, "step10_optimization_report.json")
+    os.makedirs(SCRATCH_DIR, exist_ok=True)
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(report, f, indent=2)
         
-    print(f"\nStep 10 Optimization Pipeline completed successfully! Saved report to {out_path}")
+    project_report_path = r"c:\Users\INTAN\airpollutan\reports\step10_optimization_report.json"
+    os.makedirs(os.path.dirname(project_report_path), exist_ok=True)
+    with open(project_report_path, 'w', encoding='utf-8') as f:
+        json.dump(report, f, indent=2)
+
+    print(f"\nStep 10 Optimization Pipeline completed successfully! Saved report to {out_path} and {project_report_path}")
 
 if __name__ == "__main__":
     run_step10_fast()

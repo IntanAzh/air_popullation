@@ -152,26 +152,46 @@ def merge_and_align_datasets(pollutants_df, meteo_df):
     for col in merged.columns:
         merged[col] = pd.to_numeric(merged[col], errors='coerce').astype('float64')
 
-    # Interpolate missing values (time-based linear interpolation for short gaps <= 12 steps / 6 hours)
-    for col in merged.columns:
-        merged[col] = merged[col].interpolate(method='time', limit=12, limit_direction='both')
-        merged[col] = merged[col].bfill().ffill()
+    # -------------------------------------------------------------------------
+    # STRATEGI PENANGANAN MISSING VALUES:
+    # 1. Target PM2.5: Pertahankan nilai asli sensor (jangan buat label sintetis
+    #    melalui bfill/ffill/interpolasi dua arah). Simpan di 'PM2.5_raw' agar
+    #    sampel dengan target yang hilang dapat dieksklusi dari evaluasi.
+    # 2. Fitur Input: Hanya gunakan imputasi kausal (limit_direction='forward'
+    #    dan ffill terbatas <= 12 langkah / 6 jam). Hindari bfill atau informasi masa depan.
+    # 3. Celah Waktu: Pertahankan grid 30 menit; celah panjang (> 12 langkah)
+    #    dibiarkan NaN agar sliding window tidak melompati periode yang tidak valid.
+    # -------------------------------------------------------------------------
+    target_col = 'PM2.5'
+    if target_col in merged.columns:
+        merged['PM2.5_raw'] = merged[target_col].copy()
+
+    # Imputasi kausal hanya untuk fitur input non-target
+    input_feature_cols = [c for c in merged.columns if c not in [target_col, 'PM2.5_raw']]
+    for col in input_feature_cols:
+        merged[col] = merged[col].interpolate(method='time', limit=12, limit_direction='forward')
+        merged[col] = merged[col].ffill(limit=12)
+
+    # Imputasi kausal untuk konteks input historis PM2.5 (hanya untuk lag/rolling input, bukan label target)
+    if target_col in merged.columns:
+        merged['PM2.5_input'] = merged[target_col].interpolate(method='time', limit=12, limit_direction='forward').ffill(limit=12)
 
     merged = merged.reset_index()
     return merged
 
-if __name__ == "__main__":
-    print("Running ETL pipeline...")
-    pol_df = load_and_clean_csv_pollutants()
-    print("Pollutants cleaned:", pol_df.shape)
-    print("Pollutants columns:", pol_df.columns.tolist())
-    print("Pollutants stats:\n", pol_df.describe())
-
-    met_df = load_and_clean_excel_meteo()
-    print("Meteorology cleaned:", met_df.shape)
-    print("Meteorology stats:\n", met_df.describe())
-
+def run_etl_pipeline(raw_dir=RAW_DIR, output_dir=r"c:\Users\INTAN\airpollutan\data\processed"):
+    os.makedirs(output_dir, exist_ok=True)
+    print("Executing causal ETL pipeline...")
+    pol_df = load_and_clean_csv_pollutants(raw_dir=raw_dir)
+    met_df = load_and_clean_excel_meteo(raw_dir=raw_dir)
     master = merge_and_align_datasets(pol_df, met_df)
-    print("Merged continuous master dataset:", master.shape)
-    print("Columns:", master.columns.tolist())
-    print("Master summary:\n", master.describe())
+    
+    parquet_path = os.path.join(output_dir, "aligned_master_dataset.parquet")
+    csv_path = os.path.join(output_dir, "aligned_master_dataset.csv")
+    master.to_parquet(parquet_path, index=False)
+    master.to_csv(csv_path, index=False)
+    print(f"Master dataset saved successfully to {parquet_path} and {csv_path} (Shape: {master.shape})")
+    return master
+
+if __name__ == "__main__":
+    run_etl_pipeline()

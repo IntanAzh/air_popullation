@@ -1,0 +1,73 @@
+{
+  "status": "SUCCESS",
+  "causal_preprocessing": {
+    "target_synthetic_imputation": false,
+    "target_ground_truth_source": "Raw sensor measurements only (PM2.5_raw)",
+    "input_feature_imputation": "Causal forward-only (limit 12 steps / 6h, no bfill)",
+    "sliding_window_outage_handling": "Windows crossing unobserved outages >12 steps or missing targets strictly rejected"
+  },
+  "chronological_split": {
+    "train": {
+      "rows": 10214,
+      "start": "2025-01-01 00:00:00",
+      "end": "2025-08-01 18:30:00"
+    },
+    "val": {
+      "rows": 2189,
+      "start": "2025-08-01 19:00:00",
+      "end": "2025-09-16 09:00:00"
+    },
+    "test": {
+      "rows": 2189,
+      "start": "2025-09-16 09:30:00",
+      "end": "2025-10-31 23:30:00"
+    }
+  },
+  "tensor_statistics": {
+    "train": {
+      "accepted_sequences": 7641,
+      "rejected_timestamp_gaps": 0,
+      "rejected_target_nans": 290,
+      "rejected_feature_nans": 2234,
+      "tensor_X_shape": [
+        7641,
+        48,
+        94
+      ],
+      "tensor_y_shape": [
+        7641,
+        2
+      ]
+    },
+    "val": {
+      "accepted_sequences": 642,
+      "rejected_timestamp_gaps": 0,
+      "rejected_target_nans": 1402,
+      "rejected_feature_nans": 96,
+      "tensor_X_shape": [
+        642,
+        48,
+        94
+      ],
+      "tensor_y_shape": [
+        642,
+        2
+      ]
+    },
+    "test": {
+      "accepted_sequences": 1863,
+      "rejected_timestamp_gaps": 0,
+      "rejected_target_nans": 0,
+      "rejected_feature_nans": 277,
+      "tensor_X_shape": [
+        1863,
+        48,
+        94
+      ],
+      "tensor_y_shape": [
+        1863,
+        2
+      ]
+    }
+  }
+}

@@ -46,36 +46,69 @@ def add_wind_vector_features(df):
         df['v_wind'] = -ws * np.cos(wd_rad)
     return df
 
-def add_lag_and_rolling_features(df, target_cols=['PM2.5', 'PM10', 'temperature', 'humidity', 'wind_speed']):
+def add_lag_and_rolling_features(df, lag_vars=['PM2.5', 'NO2', 'SO2', 'temperature', 'humidity', 'wind_speed'],
+                                 roll_vars=['PM2.5', 'temperature', 'humidity', 'wind_speed']):
     """
     Generates time lag features and rolling window statistics for temporal models.
+    Strictly causal (backward-looking only, no future leakage).
     """
     df = df.copy()
 
-    # Lags for 30-min steps: 1 step (30m), 2 (1h), 6 (3h), 12 (6h), 24 (12h), 48 (24h)
-    lags = [1, 2, 6, 12, 24]
-    for col in target_cols:
-        if col in df.columns:
-            for lag in lags:
-                df[f'{col}_lag_{lag}'] = df[col].shift(lag)
+    # Lags for 30-min steps: 1 step (30m), 2 (1h), 3 (1.5h), 4 (2h), 6 (3h), 12 (6h), 24 (12h), 48 (24h)
+    lag_steps = [1, 2, 3, 4, 6, 12, 24, 48]
+    for var in lag_vars:
+        if var in df.columns:
+            for step in lag_steps:
+                df[f'{var}_lag_{step}'] = df[var].shift(step)
 
-            # Rolling statistics (3-hour window = 6 steps, 24-hour window = 48 steps)
-            df[f'{col}_roll_mean_3h'] = df[col].rolling(window=6, min_periods=1).mean()
-            df[f'{col}_roll_std_3h'] = df[col].rolling(window=6, min_periods=1).std().fillna(0)
-            df[f'{col}_roll_mean_24h'] = df[col].rolling(window=48, min_periods=1).mean()
+    # Rolling statistics (3h = 6 steps, 6h = 12 steps, 24h = 48 steps)
+    for var in roll_vars:
+        if var in df.columns:
+            # 3-hour rolling (6 steps)
+            df[f'{var}_roll_mean_3h'] = df[var].rolling(window=6, min_periods=3).mean()
+            df[f'{var}_roll_std_3h'] = df[var].rolling(window=6, min_periods=3).std()
+            df[f'{var}_roll_max_3h'] = df[var].rolling(window=6, min_periods=3).max()
 
-    # Backfill lag NaNs produced at start of series
-    df = df.bfill().ffill()
+            # 6-hour rolling (12 steps)
+            df[f'{var}_roll_mean_6h'] = df[var].rolling(window=12, min_periods=6).mean()
+            df[f'{var}_roll_std_6h'] = df[var].rolling(window=12, min_periods=6).std()
+
+            # 24-hour rolling (48 steps)
+            df[f'{var}_roll_mean_24h'] = df[var].rolling(window=48, min_periods=24).mean()
+            df[f'{var}_roll_std_24h'] = df[var].rolling(window=48, min_periods=24).std()
+
+    # Keep missing lag values; handle incomplete windows downstream.
     return df
 
 def engineer_all_features(df):
     """
-    Full feature engineering execution pipeline.
+    Full feature engineering execution pipeline producing standardized 94 model features
+    plus ground-truth forecasting targets (+30m and +60m).
     """
-    df = add_derived_pm10(df)
+    df = df.copy()
+    
+    # Target ground truth strictly from raw un-imputed measurements (no synthetic evaluation labels)
+    raw_pm25 = df['PM2.5_raw'] if 'PM2.5_raw' in df.columns else df['PM2.5']
+    df['target_PM2.5_30m'] = raw_pm25.shift(-1)
+    df['target_PM2.5_60m'] = raw_pm25.shift(-2)
+
+    # Use causally imputed PM2.5 for input feature history if available
+    if 'PM2.5_input' in df.columns:
+        df['PM2.5'] = df['PM2.5_input']
+
+    # Temporal Cyclic Features
     df = add_cyclic_time_features(df)
+
+    # Wind Vector Features
     df = add_wind_vector_features(df)
+
+    # Lag & Rolling Features
     df = add_lag_and_rolling_features(df)
+
+    # Clean intermediate columns not part of feature set
+    drop_temp = [c for c in ['PM2.5_raw', 'PM2.5_input', 'PM10'] if c in df.columns]
+    df = df.drop(columns=drop_temp)
+
     return df
 
 if __name__ == "__main__":
