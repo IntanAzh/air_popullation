@@ -1,0 +1,126 @@
+{
+  "status": "VALIDATED",
+  "audit_title": "Validasi Metodologi Model Autoregressive (AR) dan Kesesuaian Preprocessing Data",
+  "dataset_info": {
+    "target": "PM2.5",
+    "temporal_resolution": "30 minutes",
+    "location": "Stasiun Pemantauan Kualitas Udara Cilacap (PLTU)",
+    "training_samples": 9230,
+    "validation_samples": 738,
+    "test_samples": 2140,
+    "lookback_window": 48
+  },
+  "audit_1_stationarity_test": {
+    "test_name": "Augmented Dickey-Fuller (ADF) Test",
+    "series_evaluated": "PM2.5 Training Series (clean non-null)",
+    "adf_statistic": -4.0601,
+    "p_value": 0.001126,
+    "critical_values": {
+      "1%": -3.431,
+      "5%": -2.862,
+      "10%": -2.567
+    },
+    "is_stationary_alpha_0_01": true,
+    "conclusion": "Deret waktu PM2.5 terbukti stasioner murni I(0) pada tingkat kepercayaan 99%. Penggunaan model Autoregressive linier (AR) tanpa diferensiasi (d=0) secara matematis valid dan terbebas dari spurious regression."
+  },
+  "audit_2_affine_equivariance": {
+    "property": "Affine Equivariance of Ordinary Least Squares (OLS)",
+    "description": "Perbandingan analitis antara OLS pada data terstandarisasi (StandardScaler + Inverse Transform) vs OLS langsung pada data unscaled mentah",
+    "max_discrepancy_ug_m3": 1.2552e-05,
+    "conclusion": "Discrepancy berada pada skala 10^-5 ug/m^3 (batas presisi komputasi floating point IEEE 754). Preprocessing penskalaan linear terbukti mempertahankan struktur solusi analitis OLS 100% identik dengan regresi pada data asli."
+  },
+  "audit_3_multi_horizon_strategy": {
+    "comparison": "Direct Multi-Horizon AR vs Recursive (Iterative) AR",
+    "models": {
+      "Direct_AR_24": {
+        "RMSE_30m": 0.9838,
+        "R2_30m": 0.6881,
+        "RMSE_60m": 1.2032,
+        "R2_60m": 0.5336
+      },
+      "Recursive_AR_24": {
+        "RMSE_30m": 0.9838,
+        "R2_30m": 0.6881,
+        "RMSE_60m": 1.2045,
+        "R2_60m": 0.5326
+      }
+    },
+    "selected_strategy": "Direct AR",
+    "rationale": "Direct AR dipilih karena menghindari akumulasi galat (error cascading) pada langkah +60 menit dan selaras 100% dengan mekanisme peramalan multi-output model Deep Learning (CNN-BiLSTM) serta model machine learning lainnya (Ridge, Random Forest)."
+  },
+  "audit_4_lag_order_selection": {
+    "protocol": "Hyperparameter Sweep on Pure Chronological Validation Set (val_tensors.npz)",
+    "data_snooping_prevention": "Test set sama sekali tidak dilibatkan dalam penentuan orde lag",
+    "sweep_results": {
+      "AR(1)": {
+        "lookback_hours": 0.5,
+        "Val_RMSE_30m": 1.4179,
+        "Val_RMSE_60m": 1.7957,
+        "Val_RMSE_avg": 1.6068
+      },
+      "AR(2)": {
+        "lookback_hours": 1.0,
+        "Val_RMSE_30m": 1.3401,
+        "Val_RMSE_60m": 1.6874,
+        "Val_RMSE_avg": 1.5137
+      },
+      "AR(4)": {
+        "lookback_hours": 2.0,
+        "Val_RMSE_30m": 1.3083,
+        "Val_RMSE_60m": 1.6305,
+        "Val_RMSE_avg": 1.4694
+      },
+      "AR(12)": {
+        "lookback_hours": 6.0,
+        "Val_RMSE_30m": 1.2634,
+        "Val_RMSE_60m": 1.545,
+        "Val_RMSE_avg": 1.4042
+      },
+      "AR(24)": {
+        "lookback_hours": 12.0,
+        "Val_RMSE_30m": 1.2621,
+        "Val_RMSE_60m": 1.5412,
+        "Val_RMSE_avg": 1.4016
+      },
+      "AR(48)": {
+        "lookback_hours": 24.0,
+        "Val_RMSE_30m": 1.2939,
+        "Val_RMSE_60m": 1.5853,
+        "Val_RMSE_avg": 1.4396
+      }
+    },
+    "best_lag_selected": 24,
+    "physical_interpretation": "Lookback 24 langkah (12 jam) menangkap siklus semi-diurnal polusi udara lokal Cilacap dan aktivitas pembangkit PLTU secara optimal."
+  },
+  "audit_5_temporal_alignment_and_leakage": {
+    "chronological_split": "True (shuffle=False)",
+    "scaler_fit_scope": "Training data strictly (first 80% chronologically)",
+    "test_samples_count": 2140,
+    "alignment_verification": "100% kongruen. Sample indeks 0 hingga 2139 pada AR merujuk pada timestamp asal (t) dan target (t+1, t+2) yang identik dengan input CNN-BiLSTM.",
+    "missing_values_in_tensors": 0
+  },
+  "audit_6_diebold_mariano_statistical_significance": {
+    "comparison": "AR(24) vs Champion CNN-BiLSTM (F1)",
+    "variance_estimator": "HAC Bartlett Kernel (Newey-West, bandwidth=8 lags)",
+    "finite_sample_correction": "Harvey-Leybourne-Newbold (1997)",
+    "distribution": "Student-t (df=2139)",
+    "results": {
+      "+30m": {
+        "RMSE_AR": 0.9838,
+        "RMSE_CNN_BiLSTM": 0.9549,
+        "DM_statistic": 1.0614,
+        "p_value": 0.2886,
+        "significant_alpha_0_05": false,
+        "interpretation": "CNN-BiLSTM memiliki RMSE lebih rendah (0.9549 vs 0.9838), namun perbedaannya secara statistik masih dalam rentang fluktuasi normal (p > 0.05)."
+      },
+      "+60m": {
+        "RMSE_AR": 1.2032,
+        "RMSE_CNN_BiLSTM": 1.2101,
+        "DM_statistic": -0.3402,
+        "p_value": 0.7337,
+        "significant_alpha_0_05": false,
+        "interpretation": "Pada horizon 60 menit, AR(24) dan CNN-BiLSTM berkinerja setara secara statistik (p = 0.7337), membuktikan AR sebagai benchmark linear yang sangat kompetitif."
+      }
+    }
+  }
+}

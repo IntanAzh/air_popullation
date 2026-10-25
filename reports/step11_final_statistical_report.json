@@ -12,6 +12,17 @@
       "RMSE_avg": 1.1514,
       "R2_avg": 0.5638
     },
+    "AR(24)": {
+      "MAE_30": 0.5349,
+      "RMSE_30": 0.9838,
+      "R2_30": 0.6881,
+      "MAE_60": 0.6674,
+      "RMSE_60": 1.2032,
+      "R2_60": 0.5336,
+      "MAE_avg": 0.6012,
+      "RMSE_avg": 1.0935,
+      "R2_avg": 0.6108
+    },
     "Ridge Regression (B1)": {
       "MAE_30": 0.6929,
       "RMSE_30": 1.0856,
@@ -99,6 +110,28 @@
           "DM_statistic": 1.8616,
           "DM_statistic_raw": 1.8629,
           "p_value": 0.062794,
+          "hac_bandwidth_lags": 8,
+          "hac_kernel": "Bartlett (Newey-West)",
+          "degrees_of_freedom": 2139,
+          "significant_alpha_0.01": false,
+          "significant_alpha_0.05": false
+        }
+      },
+      "vs_AR_24": {
+        "+30m": {
+          "DM_statistic": 1.0614,
+          "DM_statistic_raw": 1.0617,
+          "p_value": 0.288612,
+          "hac_bandwidth_lags": 8,
+          "hac_kernel": "Bartlett (Newey-West)",
+          "degrees_of_freedom": 2139,
+          "significant_alpha_0.01": false,
+          "significant_alpha_0.05": false
+        },
+        "+60m": {
+          "DM_statistic": -0.3402,
+          "DM_statistic_raw": -0.3405,
+          "p_value": 0.733727,
           "hac_bandwidth_lags": 8,
           "hac_kernel": "Bartlett (Newey-West)",
           "degrees_of_freedom": 2139,
@@ -482,6 +515,6 @@
     "dm_finite_sample_correction": "Harvey-Leybourne-Newbold (1997)",
     "dm_distribution": "Student-t (df = n - 1)",
     "test_sample_count": 2140,
-    "execution_timestamp": "2026-10-25 08:54:20.132842"
+    "execution_timestamp": "2026-10-25 12:48:47.714671"
   }
 }

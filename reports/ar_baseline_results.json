@@ -1,0 +1,174 @@
+{
+  "status": "SUCCESS",
+  "model_name": "AR(24) Autoregressive Baseline",
+  "best_lag_order": 24,
+  "lookback_duration_hours": 12.0,
+  "test_performance": {
+    "MAE_30": 0.5349,
+    "RMSE_30": 0.9838,
+    "R2_30": 0.6881,
+    "MAE_60": 0.6674,
+    "RMSE_60": 1.2032,
+    "R2_60": 0.5336,
+    "MAE_avg": 0.6012,
+    "RMSE_avg": 1.0935,
+    "R2_avg": 0.6108
+  },
+  "validation_lag_sweep": {
+    "AR(1)": {
+      "MAE_30": 0.9741,
+      "RMSE_30": 1.4179,
+      "R2_30": 0.6866,
+      "MAE_60": 1.2409,
+      "RMSE_60": 1.7957,
+      "R2_60": 0.4975,
+      "MAE_avg": 1.1075,
+      "RMSE_avg": 1.6068,
+      "R2_avg": 0.592
+    },
+    "AR(2)": {
+      "MAE_30": 0.8691,
+      "RMSE_30": 1.3401,
+      "R2_30": 0.7201,
+      "MAE_60": 1.1022,
+      "RMSE_60": 1.6874,
+      "R2_60": 0.5563,
+      "MAE_avg": 0.9857,
+      "RMSE_avg": 1.5137,
+      "R2_avg": 0.6382
+    },
+    "AR(4)": {
+      "MAE_30": 0.8184,
+      "RMSE_30": 1.3083,
+      "R2_30": 0.7332,
+      "MAE_60": 1.046,
+      "RMSE_60": 1.6305,
+      "R2_60": 0.5856,
+      "MAE_avg": 0.9322,
+      "RMSE_avg": 1.4694,
+      "R2_avg": 0.6594
+    },
+    "AR(12)": {
+      "MAE_30": 0.7922,
+      "RMSE_30": 1.2634,
+      "R2_30": 0.7512,
+      "MAE_60": 0.9969,
+      "RMSE_60": 1.545,
+      "R2_60": 0.628,
+      "MAE_avg": 0.8945,
+      "RMSE_avg": 1.4042,
+      "R2_avg": 0.6896
+    },
+    "AR(24)": {
+      "MAE_30": 0.798,
+      "RMSE_30": 1.2621,
+      "R2_30": 0.7517,
+      "MAE_60": 1.0066,
+      "RMSE_60": 1.5412,
+      "R2_60": 0.6298,
+      "MAE_avg": 0.9023,
+      "RMSE_avg": 1.4016,
+      "R2_avg": 0.6908
+    },
+    "AR(48)": {
+      "MAE_30": 0.8688,
+      "RMSE_30": 1.2939,
+      "R2_30": 0.739,
+      "MAE_60": 1.1112,
+      "RMSE_60": 1.5853,
+      "R2_60": 0.6083,
+      "MAE_avg": 0.99,
+      "RMSE_avg": 1.4396,
+      "R2_avg": 0.6737
+    }
+  },
+  "test_lag_sweep": {
+    "AR(1)": {
+      "MAE_30": 0.5658,
+      "RMSE_30": 1.0038,
+      "R2_30": 0.6753,
+      "MAE_60": 0.7373,
+      "RMSE_60": 1.2961,
+      "R2_60": 0.4588,
+      "MAE_avg": 0.6515,
+      "RMSE_avg": 1.1499,
+      "R2_avg": 0.567
+    },
+    "AR(2)": {
+      "MAE_30": 0.5448,
+      "RMSE_30": 1.006,
+      "R2_30": 0.6739,
+      "MAE_60": 0.6985,
+      "RMSE_60": 1.266,
+      "R2_60": 0.4836,
+      "MAE_avg": 0.6216,
+      "RMSE_avg": 1.136,
+      "R2_avg": 0.5787
+    },
+    "AR(4)": {
+      "MAE_30": 0.5364,
+      "RMSE_30": 0.9949,
+      "R2_30": 0.681,
+      "MAE_60": 0.6818,
+      "RMSE_60": 1.2449,
+      "R2_60": 0.5007,
+      "MAE_avg": 0.6091,
+      "RMSE_avg": 1.1199,
+      "R2_avg": 0.5909
+    },
+    "AR(12)": {
+      "MAE_30": 0.5343,
+      "RMSE_30": 0.9899,
+      "R2_30": 0.6842,
+      "MAE_60": 0.6716,
+      "RMSE_60": 1.2184,
+      "R2_60": 0.5217,
+      "MAE_avg": 0.603,
+      "RMSE_avg": 1.1042,
+      "R2_avg": 0.603
+    },
+    "AR(24)": {
+      "MAE_30": 0.5349,
+      "RMSE_30": 0.9838,
+      "R2_30": 0.6881,
+      "MAE_60": 0.6674,
+      "RMSE_60": 1.2032,
+      "R2_60": 0.5336,
+      "MAE_avg": 0.6012,
+      "RMSE_avg": 1.0935,
+      "R2_avg": 0.6108
+    },
+    "AR(48)": {
+      "MAE_30": 0.5448,
+      "RMSE_30": 0.9843,
+      "R2_30": 0.6878,
+      "MAE_60": 0.6757,
+      "RMSE_60": 1.196,
+      "R2_60": 0.5391,
+      "MAE_avg": 0.6102,
+      "RMSE_avg": 1.0901,
+      "R2_avg": 0.6135
+    }
+  },
+  "statsmodels_diagnostics": {
+    "+30m": {
+      "AIC": 15907.79,
+      "BIC": 16086.05,
+      "F_statistic": 909.16,
+      "F_pvalue": 0.0,
+      "R2_uncentered": 0.7033
+    },
+    "+60m": {
+      "AIC": 17678.37,
+      "BIC": 17856.62,
+      "F_statistic": 683.83,
+      "F_pvalue": 0.0,
+      "R2_uncentered": 0.6407
+    }
+  },
+  "artifacts": {
+    "model_path": "C:\\Users\\INTAN\\airpollutan\\models\\B_AR_model.joblib",
+    "predictions_parquet": "C:\\Users\\INTAN\\airpollutan\\data\\processed\\predictions\\B_AR_24_predictions.parquet",
+    "predictions_csv": "C:\\Users\\INTAN\\airpollutan\\data\\processed\\predictions\\B_AR_24_predictions.csv"
+  }
+}

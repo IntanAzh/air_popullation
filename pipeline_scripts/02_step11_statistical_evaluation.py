@@ -320,11 +320,23 @@ def main():
     with torch.no_grad():
         p_cnn_bilstm_f4 = y_scaler.inverse_transform(m_bilstm_f4(X_te_f4).numpy())
         
+    # Autoregressive Model: AR(24)
+    ar_model_path = os.path.join(MODEL_DIR, "B_AR_model.joblib")
+    if os.path.exists(ar_model_path):
+        ar_data = joblib.load(ar_model_path)
+        ar_model = ar_data["model"]
+        p_ar = y_scaler.inverse_transform(ar_model.predict(X_test_full[:, -24:, pm25_idx]))
+    else:
+        from sklearn.linear_model import LinearRegression
+        ar_model = LinearRegression().fit(train_npz['X'][:, -24:, pm25_idx], y_tr_s)
+        p_ar = y_scaler.inverse_transform(ar_model.predict(X_test_full[:, -24:, pm25_idx]))
+        
     # -------------------------------------------------------------
     # 11A — FINAL PERFORMANCE SUMMARY TABLE
     # -------------------------------------------------------------
     models_pred = {
         "Persistence (B0)": p_persistence,
+        "AR(24)": p_ar,
         "Ridge Regression (B1)": p_ridge,
         "Random Forest (B2)": p_rf,
         "CNN-BiLSTM (Full 94 Fitur)": p_cnn_bilstm_f4,
@@ -369,6 +381,7 @@ def main():
     
     e_pers = y_test_unscaled - p_persistence
     e_champ = y_test_unscaled - p_cnn_bilstm_f1
+    e_ar = y_test_unscaled - p_ar
     e_ridge = y_test_unscaled - p_ridge
     e_rf = y_test_unscaled - p_rf
     e_full = y_test_unscaled - p_cnn_bilstm_f4
@@ -377,6 +390,8 @@ def main():
     dm_res_30 = diebold_mariano_test(e_pers[:, 0], e_champ[:, 0], h=1, power=2)
     dm_res_60 = diebold_mariano_test(e_pers[:, 1], e_champ[:, 1], h=2, power=2)
     
+    dm_vs_ar_30 = diebold_mariano_test(e_ar[:, 0], e_champ[:, 0], h=1, power=2)
+    dm_vs_ar_60 = diebold_mariano_test(e_ar[:, 1], e_champ[:, 1], h=2, power=2)
     dm_vs_ridge_30 = diebold_mariano_test(e_ridge[:, 0], e_champ[:, 0], h=1, power=2)
     dm_vs_ridge_60 = diebold_mariano_test(e_ridge[:, 1], e_champ[:, 1], h=2, power=2)
     dm_vs_rf_30 = diebold_mariano_test(e_rf[:, 0], e_champ[:, 0], h=1, power=2)
@@ -395,6 +410,10 @@ def main():
             "vs_Persistence_B0": {
                 "+30m": dm_res_30,
                 "+60m": dm_res_60
+            },
+            "vs_AR_24": {
+                "+30m": dm_vs_ar_30,
+                "+60m": dm_vs_ar_60
             },
             "vs_Ridge_Regression_B1": {
                 "+30m": dm_vs_ridge_30,
@@ -555,28 +574,35 @@ def main():
     plt.close()
     
     # Figure 4: Model Comparison Bar Chart
-    fig, ax = plt.subplots(1, 3, figsize=(16, 5))
-    model_names_short = ["Persistence", "Ridge", "Random Forest", "CNN-BiLSTM (Full)", "CNN-BiLSTM-Attn", "CNN-BiLSTM (F1)"]
+    fig, ax = plt.subplots(1, 3, figsize=(17, 5.5))
+    model_names_short = ["Persistence", "AR(24)", "Ridge", "Random Forest", "CNN-BiLSTM (Full)", "CNN-BiLSTM-Attn", "CNN-BiLSTM (F1)"]
     mae_30_vals = [summary_metrics[m]["MAE_30"] for m in summary_metrics]
     rmse_30_vals = [summary_metrics[m]["RMSE_30"] for m in summary_metrics]
     r2_30_vals = [summary_metrics[m]["R2_30"] for m in summary_metrics]
-    colors = ['#7f7f7f', '#aec7e8', '#ffbb78', '#ff7f0e', '#d62728', '#2ca02c']
+    colors = ['#7f7f7f', '#17becf', '#aec7e8', '#ffbb78', '#ff7f0e', '#d62728', '#2ca02c']
     
-    ax[0].barh(model_names_short, mae_30_vals, color=colors)
+    b0 = ax[0].barh(model_names_short, mae_30_vals, color=colors)
     ax[0].set_title("MAE (+30 Min)", fontsize=12, fontweight='bold')
     ax[0].set_xlabel("µg/m³")
     ax[0].grid(True, alpha=0.3)
+    ax[0].bar_label(b0, fmt='%.3f', padding=3, fontsize=9)
+    ax[0].set_xlim(0, max(mae_30_vals) * 1.15)
     
-    ax[1].barh(model_names_short, rmse_30_vals, color=colors)
+    b1 = ax[1].barh(model_names_short, rmse_30_vals, color=colors)
     ax[1].set_title("RMSE (+30 Min)", fontsize=12, fontweight='bold')
     ax[1].set_xlabel("µg/m³")
     ax[1].grid(True, alpha=0.3)
+    ax[1].bar_label(b1, fmt='%.4f', padding=4, fontsize=9)
+    ax[1].set_xlim(0, max(rmse_30_vals) * 1.18)
     
-    ax[2].barh(model_names_short, r2_30_vals, color=colors)
+    b2 = ax[2].barh(model_names_short, r2_30_vals, color=colors)
     ax[2].set_title("R² Score (+30 Min)", fontsize=12, fontweight='bold')
     ax[2].set_xlabel("R² Score")
-    ax[2].set_xlim(0, 0.8)
+    ax[2].set_xlim(-0.25, 0.88)
+    ax[2].axvline(0, color='black', linestyle='--', linewidth=0.9, alpha=0.7)
     ax[2].grid(True, alpha=0.3)
+    ax[2].tick_params(axis='y', pad=8)
+    ax[2].bar_label(b2, fmt='%.3f', padding=5, fontsize=9)
     
     plt.tight_layout()
     fig4_path = os.path.join(FIGURE_DIR, "fig4_model_comparison_bar.png")
