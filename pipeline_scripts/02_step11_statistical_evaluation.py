@@ -100,66 +100,150 @@ def calculate_metrics(y_true, y_pred):
         "R2_avg": round((r2_30 + r2_60) / 2.0, 4)
     }
 
-def diebold_mariano_test(e1, e2, h=1, power=2):
+def diebold_mariano_test(e1, e2, h=1, power=2, max_lags=None):
+    """
+    Diebold-Mariano test with Harvey-Leybourne-Newbold (1997) small-sample correction
+    and HAC (Newey-West / Bartlett kernel) variance estimation for serial autocorrelation.
+    """
     if power == 1:
         d = np.abs(e1) - np.abs(e2)
     else:
         d = e1**2 - e2**2
         
     n = len(d)
-    d_bar = np.mean(d)
+    d_bar = float(np.mean(d))
     
-    gamma = []
-    for k in range(h):
-        if k == 0:
-            gamma.append(np.mean((d - d_bar)**2))
-        else:
-            gamma.append(np.mean((d[k:] - d_bar) * (d[:-k] - d_bar)))
-            
-    var_d = gamma[0] + 2 * np.sum(gamma[1:])
+    # HAC bandwidth selection: Bartlett kernel with Andrews/Newey-West rule
+    if max_lags is None:
+        max_lags = max(h - 1, int(np.ceil(4.0 * (n / 100.0)**(2.0 / 9.0))))
+        
+    gamma_0 = float(np.mean((d - d_bar)**2))
+    weighted_cov_sum = 0.0
+    for k in range(1, max_lags + 1):
+        gamma_k = float(np.mean((d[k:] - d_bar) * (d[:-k] - d_bar)))
+        weight_k = 1.0 - (k / (max_lags + 1.0))  # Bartlett kernel
+        weighted_cov_sum += 2.0 * weight_k * gamma_k
+        
+    var_d = gamma_0 + weighted_cov_sum
     if var_d <= 0:
         var_d = 1e-8
         
     dm_stat = d_bar / np.sqrt(var_d / n)
     hln_corr = np.sqrt((n + 1 - 2*h + (h/n)*(h-1)) / n)
     dm_stat_corrected = dm_stat * hln_corr
-    p_value = 2.0 * (1.0 - stats.norm.cdf(np.abs(dm_stat_corrected)))
     
-    return float(dm_stat_corrected), float(p_value)
+    # Precise two-sided p-value using Student-t distribution (df = n - 1)
+    p_value = float(2.0 * (1.0 - stats.t.cdf(np.abs(dm_stat_corrected), df=n - 1)))
+    
+    return {
+        "DM_statistic": round(float(dm_stat_corrected), 4),
+        "DM_statistic_raw": round(float(dm_stat), 4),
+        "p_value": round(float(p_value), 6),
+        "hac_bandwidth_lags": int(max_lags),
+        "hac_kernel": "Bartlett (Newey-West)",
+        "degrees_of_freedom": int(n - 1),
+        "significant_alpha_0.01": bool(p_value < 0.01),
+        "significant_alpha_0.05": bool(p_value < 0.05)
+    }
 
-def block_bootstrap_rmse_diff_fast(y_true, pred_base, pred_model, block_size=24, n_bootstraps=1000):
+def block_bootstrap_rmse_diff_comprehensive(y_true, pred_base, pred_model, block_sizes=[12, 24, 48, 96], n_bootstraps=1000, seed=42):
+    """
+    Paired Moving Block Bootstrap across multiple block lengths.
+    - Preserves paired sampling between ground truth, baseline, and model.
+    - Tests multiple block lengths (6h, 12h, 24h diurnal, 48h).
+    - Reports 95% and 99% confidence intervals.
+    - Properly reports centered two-sided hypothesis test p-value and directional empirical probability.
+    """
+    rng = np.random.default_rng(seed)
     n = len(y_true)
-    num_blocks = int(np.ceil(n / block_size))
-    
-    starts = np.random.randint(0, n - block_size + 1, size=(n_bootstraps, num_blocks))
-    diff_30 = np.zeros(n_bootstraps)
-    diff_60 = np.zeros(n_bootstraps)
     
     err_base_sq_30 = (y_true[:, 0] - pred_base[:, 0])**2
     err_mod_sq_30 = (y_true[:, 0] - pred_model[:, 0])**2
     err_base_sq_60 = (y_true[:, 1] - pred_base[:, 1])**2
     err_mod_sq_60 = (y_true[:, 1] - pred_model[:, 1])**2
     
-    for b in range(n_bootstraps):
-        idx = np.concatenate([np.arange(s, s + block_size) for s in starts[b]])[:n]
-        rmse_b30 = np.sqrt(np.mean(err_base_sq_30[idx]))
-        rmse_m30 = np.sqrt(np.mean(err_mod_sq_30[idx]))
-        diff_30[b] = rmse_b30 - rmse_m30
-        
-        rmse_b60 = np.sqrt(np.mean(err_base_sq_60[idx]))
-        rmse_m60 = np.sqrt(np.mean(err_mod_sq_60[idx]))
-        diff_60[b] = rmse_b60 - rmse_m60
-        
-    ci_30 = [float(np.percentile(diff_30, 2.5)), float(np.percentile(diff_30, 97.5))]
-    ci_60 = [float(np.percentile(diff_60, 2.5)), float(np.percentile(diff_60, 97.5))]
+    obs_rmse_b30 = np.sqrt(np.mean(err_base_sq_30))
+    obs_rmse_m30 = np.sqrt(np.mean(err_mod_sq_30))
+    obs_diff_30 = float(obs_rmse_b30 - obs_rmse_m30)
     
-    p_30 = float(np.mean(diff_30 <= 0))
-    p_60 = float(np.mean(diff_60 <= 0))
+    obs_rmse_b60 = np.sqrt(np.mean(err_base_sq_60))
+    obs_rmse_m60 = np.sqrt(np.mean(err_mod_sq_60))
+    obs_diff_60 = float(obs_rmse_b60 - obs_rmse_m60)
     
-    return {
-        "+30m": {"mean_diff": round(float(np.mean(diff_30)), 4), "95_CI": [round(c, 4) for c in ci_30], "p_value": round(p_30, 5)},
-        "+60m": {"mean_diff": round(float(np.mean(diff_60)), 4), "95_CI": [round(c, 4) for c in ci_60], "p_value": round(p_60, 5)}
+    results = {
+        "observed_rmse_diff": {
+            "+30m": round(obs_diff_30, 4),
+            "+60m": round(obs_diff_60, 4)
+        },
+        "block_results": {}
     }
+    
+    for b_size in block_sizes:
+        num_blocks = int(np.ceil(n / b_size))
+        starts = rng.integers(0, n - b_size + 1, size=(n_bootstraps, num_blocks))
+        
+        diff_30 = np.zeros(n_bootstraps)
+        diff_60 = np.zeros(n_bootstraps)
+        
+        for b in range(n_bootstraps):
+            # Paired block resample indices
+            idx = np.concatenate([np.arange(s, s + b_size) for s in starts[b]])[:n]
+            
+            rmse_b30 = np.sqrt(np.mean(err_base_sq_30[idx]))
+            rmse_m30 = np.sqrt(np.mean(err_mod_sq_30[idx]))
+            diff_30[b] = rmse_b30 - rmse_m30
+            
+            rmse_b60 = np.sqrt(np.mean(err_base_sq_60[idx]))
+            rmse_m60 = np.sqrt(np.mean(err_mod_sq_60[idx]))
+            diff_60[b] = rmse_b60 - rmse_m60
+            
+        ci_95_30 = [float(np.percentile(diff_30, 2.5)), float(np.percentile(diff_30, 97.5))]
+        ci_99_30 = [float(np.percentile(diff_30, 0.5)), float(np.percentile(diff_30, 99.5))]
+        ci_95_60 = [float(np.percentile(diff_60, 2.5)), float(np.percentile(diff_60, 97.5))]
+        ci_99_60 = [float(np.percentile(diff_60, 0.5)), float(np.percentile(diff_60, 99.5))]
+        
+        # Centered two-sided hypothesis test p-value: H0: mean(diff) = 0
+        p_val_two_sided_30 = float(np.mean(np.abs(diff_30 - np.mean(diff_30)) >= np.abs(obs_diff_30)))
+        p_val_two_sided_60 = float(np.mean(np.abs(diff_60 - np.mean(diff_60)) >= np.abs(obs_diff_60)))
+        
+        # Empirical two-sided p-value
+        p_val_emp_30 = float(min(1.0, 2.0 * min(np.mean(diff_30 <= 0), np.mean(diff_30 >= 0))))
+        p_val_emp_60 = float(min(1.0, 2.0 * min(np.mean(diff_60 <= 0), np.mean(diff_60 >= 0))))
+        
+        # One-sided directional tail: P(diff <= 0)
+        p_dir_30 = float(np.mean(diff_30 <= 0))
+        p_dir_60 = float(np.mean(diff_60 <= 0))
+        
+        duration_hours = float(b_size * 0.5)  # 30-min per step
+        results["block_results"][f"block_{b_size}"] = {
+            "block_size_timesteps": int(b_size),
+            "block_duration_hours": duration_hours,
+            "+30m": {
+                "mean_diff": round(float(np.mean(diff_30)), 4),
+                "std_err": round(float(np.std(diff_30)), 4),
+                "95_CI": [round(c, 4) for c in ci_95_30],
+                "99_CI": [round(c, 4) for c in ci_99_30],
+                "p_value_two_sided_centered": round(p_val_two_sided_30, 5),
+                "p_value_two_sided_empirical": round(p_val_emp_30, 5),
+                "prop_diff_le_0_one_sided": round(p_dir_30, 5),
+                "significant_at_alpha_0.05": bool(ci_95_30[0] > 0 or ci_95_30[1] < 0)
+            },
+            "+60m": {
+                "mean_diff": round(float(np.mean(diff_60)), 4),
+                "std_err": round(float(np.std(diff_60)), 4),
+                "95_CI": [round(c, 4) for c in ci_95_60],
+                "99_CI": [round(c, 4) for c in ci_99_60],
+                "p_value_two_sided_centered": round(p_val_two_sided_60, 5),
+                "p_value_two_sided_empirical": round(p_val_emp_60, 5),
+                "prop_diff_le_0_one_sided": round(p_dir_60, 5),
+                "significant_at_alpha_0.05": bool(ci_95_60[0] > 0 or ci_95_60[1] < 0)
+            }
+        }
+        
+    primary_block_key = f"block_{block_sizes[2]}" if len(block_sizes) > 2 else f"block_{block_sizes[0]}"
+    results["primary_reference_block"] = results["block_results"][primary_block_key]
+    
+    return results
 
 def main():
     print("=== STARTING STEP 11: INSTANT EVALUATION ===")
@@ -183,22 +267,35 @@ def main():
     p_persistence_scaled = np.column_stack([last_pm25_scaled, last_pm25_scaled])
     p_persistence = y_scaler.inverse_transform(p_persistence_scaled)
     
-    # Ridge
-    from sklearn.linear_model import Ridge
+    # Ridge (B1)
     train_npz = np.load(os.path.join(TENSOR_DIR, "train_tensors.npz"))
     X_tr_2d = train_npz['X'].reshape(len(train_npz['X']), -1)
     y_tr_s = train_npz['y_scaled']
     X_te_2d = X_test_full.reshape(len(X_test_full), -1)
     
-    ridge = Ridge(alpha=100.0)
-    ridge.fit(X_tr_2d, y_tr_s)
+    ridge_path = os.path.join(MODEL_DIR, "B1_Ridge.joblib")
+    if os.path.exists(ridge_path):
+        ridge = joblib.load(ridge_path)
+    else:
+        from sklearn.linear_model import Ridge
+        ridge = Ridge(alpha=100.0)
+        ridge.fit(X_tr_2d, y_tr_s)
     p_ridge = y_scaler.inverse_transform(ridge.predict(X_te_2d))
     
-    # Random Forest (Fast DecisionTree / ExtraTrees for benchmark)
-    from sklearn.tree import DecisionTreeRegressor
-    dt = DecisionTreeRegressor(max_depth=10, random_state=42)
-    dt.fit(X_tr_2d, y_tr_s)
-    p_rf = y_scaler.inverse_transform(dt.predict(X_te_2d))
+    # Random Forest (B2)
+    rf_path = os.path.join(MODEL_DIR, "B2_RandomForest.joblib")
+    if os.path.exists(rf_path):
+        rf = joblib.load(rf_path)
+    else:
+        from sklearn.ensemble import RandomForestRegressor
+        rf = RandomForestRegressor(
+            n_estimators=100,
+            max_depth=10,
+            random_state=42,
+            n_jobs=-1
+        )
+        rf.fit(X_tr_2d, y_tr_s)
+    p_rf = y_scaler.inverse_transform(rf.predict(X_te_2d))
     
     # Champion Model: Optimal CNN-BiLSTM (F1)
     X_te_f1 = torch.tensor(X_test_full[:, :, f1_indices], dtype=torch.float32)
@@ -218,6 +315,7 @@ def main():
     # Unregularized Model: CNN-BiLSTM (Full 94 features)
     X_te_f4 = torch.tensor(X_test_full, dtype=torch.float32)
     m_bilstm_f4 = FlexibleCNNBiLSTM(input_dim=len(all_cols), conv_filters=64, lstm_hidden=64, dropout_rate=0.3)
+    m_bilstm_f4.load_state_dict(torch.load(os.path.join(MODEL_DIR, "B6_CNN_BiLSTM.pt"), map_location='cpu'))
     m_bilstm_f4.eval()
     with torch.no_grad():
         p_cnn_bilstm_f4 = y_scaler.inverse_transform(m_bilstm_f4(X_te_f4).numpy())
@@ -265,18 +363,53 @@ def main():
     # -------------------------------------------------------------
     # 11C — STATISTICAL SIGNIFICANCE TESTS
     # -------------------------------------------------------------
+    TEST_SEED = 42
+    N_BOOTSTRAPS = 1000
+    BLOCK_SIZES = [12, 24, 48, 96]
+    
     e_pers = y_test_unscaled - p_persistence
     e_champ = y_test_unscaled - p_cnn_bilstm_f1
+    e_ridge = y_test_unscaled - p_ridge
+    e_rf = y_test_unscaled - p_rf
+    e_full = y_test_unscaled - p_cnn_bilstm_f4
     
-    dm_stat_30, p_val_dm_30 = diebold_mariano_test(e_pers[:, 0], e_champ[:, 0], h=1, power=2)
-    dm_stat_60, p_val_dm_60 = diebold_mariano_test(e_pers[:, 1], e_champ[:, 1], h=2, power=2)
+    # Diebold-Mariano tests with HAC variance (Bartlett/Newey-West) & HLN correction
+    dm_res_30 = diebold_mariano_test(e_pers[:, 0], e_champ[:, 0], h=1, power=2)
+    dm_res_60 = diebold_mariano_test(e_pers[:, 1], e_champ[:, 1], h=2, power=2)
     
-    boot_results = block_bootstrap_rmse_diff_fast(y_test_unscaled, p_persistence, p_cnn_bilstm_f1, block_size=24, n_bootstraps=1000)
+    dm_vs_ridge_30 = diebold_mariano_test(e_ridge[:, 0], e_champ[:, 0], h=1, power=2)
+    dm_vs_ridge_60 = diebold_mariano_test(e_ridge[:, 1], e_champ[:, 1], h=2, power=2)
+    dm_vs_rf_30 = diebold_mariano_test(e_rf[:, 0], e_champ[:, 0], h=1, power=2)
+    dm_vs_rf_60 = diebold_mariano_test(e_rf[:, 1], e_champ[:, 1], h=2, power=2)
+    dm_vs_full_30 = diebold_mariano_test(e_full[:, 0], e_champ[:, 0], h=1, power=2)
+    dm_vs_full_60 = diebold_mariano_test(e_full[:, 1], e_champ[:, 1], h=2, power=2)
+
+    # Moving Block Bootstrap across multiple block lengths with paired sampling
+    boot_results = block_bootstrap_rmse_diff_comprehensive(
+        y_test_unscaled, p_persistence, p_cnn_bilstm_f1,
+        block_sizes=BLOCK_SIZES, n_bootstraps=N_BOOTSTRAPS, seed=TEST_SEED
+    )
     
     stat_tests = {
         "Diebold_Mariano_Test": {
-            "+30m": {"DM_statistic": round(dm_stat_30, 4), "p_value": round(p_val_dm_30, 6), "significant_alpha_0.01": p_val_dm_30 < 0.01},
-            "+60m": {"DM_statistic": round(dm_stat_60, 4), "p_value": round(p_val_dm_60, 6), "significant_alpha_0.01": p_val_dm_60 < 0.01}
+            "vs_Persistence_B0": {
+                "+30m": dm_res_30,
+                "+60m": dm_res_60
+            },
+            "vs_Ridge_Regression_B1": {
+                "+30m": dm_vs_ridge_30,
+                "+60m": dm_vs_ridge_60
+            },
+            "vs_Random_Forest_B2": {
+                "+30m": dm_vs_rf_30,
+                "+60m": dm_vs_rf_60
+            },
+            "vs_CNN_BiLSTM_94_Features": {
+                "+30m": dm_vs_full_30,
+                "+60m": dm_vs_full_60
+            },
+            "+30m": dm_res_30,
+            "+60m": dm_res_60
         },
         "Block_Bootstrap_Test": boot_results
     }
@@ -450,6 +583,22 @@ def main():
     plt.savefig(fig4_path, dpi=300)
     plt.close()
 
+    reproducibility_params = {
+        "random_seed": TEST_SEED,
+        "n_bootstraps": N_BOOTSTRAPS,
+        "bootstrap_block_sizes_steps": BLOCK_SIZES,
+        "bootstrap_block_durations_hours": [b * 0.5 for b in BLOCK_SIZES],
+        "bootstrap_primary_block": "block_48 (24.0 hours / 1 diurnal cycle)",
+        "paired_sampling": True,
+        "dm_loss_power": 2,
+        "dm_hac_kernel": "Bartlett (Newey-West)",
+        "dm_bandwidth_rule": "max(h-1, ceil(4*(n/100)^(2/9)))",
+        "dm_finite_sample_correction": "Harvey-Leybourne-Newbold (1997)",
+        "dm_distribution": "Student-t (df = n - 1)",
+        "test_sample_count": int(len(y_test_unscaled)),
+        "execution_timestamp": str(pd.Timestamp.now())
+    }
+
     report = {
         "status": "SUCCESS",
         "step_11a_final_performance_summary": summary_metrics,
@@ -465,14 +614,27 @@ def main():
             "fig2_scatter": fig2_path,
             "fig3_residuals": fig3_path,
             "fig4_comparison": fig4_path
-        }
+        },
+        "step_11f_reproducibility_parameters": reproducibility_params
     }
     
     out_path = os.path.join(SCRATCH_DIR, "step11_final_statistical_report.json")
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(report, f, indent=2)
         
-    print(f"\nStep 11 Instant Evaluation Completed Successfully! Saved report to {out_path}")
+    # Also save to project reports and figures directories
+    project_report_path = r"c:\Users\INTAN\airpollutan\reports\step11_final_statistical_report.json"
+    os.makedirs(os.path.dirname(project_report_path), exist_ok=True)
+    with open(project_report_path, 'w', encoding='utf-8') as f:
+        json.dump(report, f, indent=2)
+
+    import shutil
+    project_fig_dir = r"c:\Users\INTAN\airpollutan\figures"
+    os.makedirs(project_fig_dir, exist_ok=True)
+    for fig_f in [fig1_path, fig2_path, fig3_path, fig4_path]:
+        shutil.copy2(fig_f, os.path.join(project_fig_dir, os.path.basename(fig_f)))
+
+    print(f"\nStep 11 Instant Evaluation Completed Successfully! Saved report to {out_path} and {project_report_path}")
 
 if __name__ == "__main__":
     main()
